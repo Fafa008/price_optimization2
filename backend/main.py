@@ -5,6 +5,7 @@ from typing import List, Optional
 import os
 from dotenv import load_dotenv
 from supabase import create_client, Client
+from optimization import PriceOptimizer
 
 load_dotenv()
 
@@ -51,7 +52,7 @@ async def get_products():
 @app.get("/api/products/{product_id}")
 async def get_product(product_id: str):
     try:
-        response = supabase.table("products").select("*").eq("product_id", product_id).maybeSingle().execute()
+        response = supabase.table("products").select("*").eq("product_id", product_id).maybe_single().execute()
         if not response.data:
             raise HTTPException(status_code=404, detail="Product not found")
         return response.data
@@ -63,12 +64,90 @@ async def get_product(product_id: str):
 @app.get("/api/products/{product_id}/price-history")
 async def get_price_history(product_id: str):
     try:
-        product_response = supabase.table("products").select("id").eq("product_id", product_id).maybeSingle().execute()
+        product_response = supabase.table("products").select("id").eq("product_id", product_id).maybe_single().execute()
         if not product_response.data:
             raise HTTPException(status_code=404, detail="Product not found")
 
         history_response = supabase.table("price_history").select("*").eq("product_id", product_response.data["id"]).order("year", desc=False).order("month", desc=False).execute()
         return {"price_history": history_response.data}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/optimize")
+async def optimize_price(payload: PriceOptimizationRequest):
+    try:
+        # Resolve internal product id
+        product_response = (
+            supabase
+            .table("products")
+            .select("id, product_id")
+            .eq("product_id", payload.product_id)
+            .maybe_single()
+            .execute()
+        )
+        if not product_response.data:
+            raise HTTPException(status_code=404, detail="Product not found")
+
+        internal_product_id = product_response.data["id"]
+
+        # Load price history with required features
+        history_response = (
+            supabase
+            .table("price_history")
+            .select("*")
+            .eq("product_id", internal_product_id)
+            .order("year", desc=False)
+            .order("month", desc=False)
+            .execute()
+        )
+
+        price_data: List[dict] = history_response.data or []
+        if len(price_data) < 5:
+            raise HTTPException(status_code=400, detail="Insufficient data to optimize (need >= 5 records)")
+
+        optimizer = PriceOptimizer()
+        result = optimizer.optimize_price(price_data, target_revenue=payload.target_revenue)
+
+        # Also include a quick model summary
+        model_info = optimizer.train_demand_model(price_data)
+
+        return {"product_id": payload.product_id, "result": result, "model": model_info}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/products/{product_id}/elasticity")
+async def get_price_elasticity(product_id: str):
+    try:
+        product_response = (
+            supabase
+            .table("products")
+            .select("id, product_id")
+            .eq("product_id", product_id)
+            .maybe_single()
+            .execute()
+        )
+        if not product_response.data:
+            raise HTTPException(status_code=404, detail="Product not found")
+
+        internal_product_id = product_response.data["id"]
+        history_response = (
+            supabase
+            .table("price_history")
+            .select("unit_price, qty")
+            .eq("product_id", internal_product_id)
+            .order("year", desc=False)
+            .order("month", desc=False)
+            .execute()
+        )
+
+        price_data: List[dict] = history_response.data or []
+        optimizer = PriceOptimizer()
+        elasticity = optimizer.calculate_elasticity(price_data)
+        return {"product_id": product_id, "elasticity": elasticity}
     except HTTPException:
         raise
     except Exception as e:
