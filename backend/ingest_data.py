@@ -31,10 +31,10 @@ def ingest_csv_data(csv_path: str):
 
     for idx, row in unique_products.iterrows():
         try:
-            existing = supabase.table("products").select("id").eq("product_id", row['product_id']).maybeSingle().execute()
+            existing = supabase.table("products").select("id").eq("product_id", row['product_id']).execute()
 
-            if existing.data:
-                product_map[row['product_id']] = existing.data['id']
+            if existing.data and len(existing.data) > 0:
+                product_map[row['product_id']] = existing.data[0]['id']
                 print(f"Product {row['product_id']} already exists, skipping...")
                 continue
 
