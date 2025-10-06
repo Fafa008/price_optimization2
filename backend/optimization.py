@@ -1,6 +1,5 @@
-import numpy as np
 import pandas as pd
-from typing import Dict, List, Tuple
+import numpy as np
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import StandardScaler
 
@@ -8,29 +7,41 @@ class PriceOptimizer:
     def __init__(self):
         self.model = None
         self.scaler = StandardScaler()
-        self.feature_names: List[str] = []
+        self.feature_names: list[str] = []
 
-    def prepare_features(self, price_data: List[Dict]) -> Tuple[np.ndarray, np.ndarray, List[str]]:
+    def prepare_features(self, price_data: list[dict]) -> tuple[np.ndarray, np.ndarray, list[str]]:
         df = pd.DataFrame(price_data)
 
+        # List de toutes les features candidate
         feature_columns = [
             'unit_price', 'freight_price', 'product_score',
             'weekday', 'weekend', 'holiday', 'month', 's', 'lag_price'
         ]
 
-        available_features = [col for col in feature_columns if col in df.columns]
+        # Exclure total_price pour éviter la fuite
+        features_to_use = [
+            'unit_price', 'freight_price', 'product_score',
+            'weekday', 'weekend', 'holiday', 'month', 's', 'lag_price'
+        ]
 
+        available_features = [col for col in features_to_use if col in df.columns]
+
+        # Gérer les valeurs NaN si besoin
         X = df[available_features].fillna(0).values
         y = df['qty'].fillna(0).values
 
+        # Optionnel : transformer la cible (log) pour traiter asymétrie
+        # y = np.log1p(y)  # Si approprié, mais attention à l'interprétation
+
         return X, y, available_features
 
-    def train_demand_model(self, price_data: List[Dict]):
+    def train_demand_model(self, price_data: list[dict]) -> dict:
         X, y, feature_names = self.prepare_features(price_data)
 
         if len(X) < 5:
             raise ValueError("Insufficient data for training. Need at least 5 records.")
 
+        # Entraînement avec normalisation
         X_scaled = self.scaler.fit_transform(X)
 
         self.model = LinearRegression()
@@ -43,35 +54,37 @@ class PriceOptimizer:
             "intercept": float(self.model.intercept_)
         }
 
-    def predict_demand(self, features: Dict) -> float:
+    def predict_demand(self, features: dict) -> float:
         if self.model is None:
             raise ValueError("Model not trained. Call train_demand_model first.")
 
-        # Build feature vector in the exact order used during training
         vector = [features.get(name, 0) for name in self.feature_names]
         feature_array = np.array([vector])
-
         feature_scaled = self.scaler.transform(feature_array)
         prediction = self.model.predict(feature_scaled)
 
-        return max(0, float(prediction[0]))
+        # Si la demande est très faible ou négative, ajuster si besoin
+        demand = max(0, float(prediction[0]))
+        # Si transformation log était appliquée, appliquer inverse ici
+        # demand = np.expm1(prediction[0])
+        return demand
 
-    def optimize_price(self, price_data: List[Dict], target_revenue: float = None) -> Dict:
+    def optimize_price(self, price_data: list[dict]) -> dict:
+        # Entraîner le modèle
         self.train_demand_model(price_data)
-
         df = pd.DataFrame(price_data)
 
-        # Safe accessors for possibly-missing columns
-        def mean_or(df: pd.DataFrame, col: str, default: float = 0.0) -> float:
+        def mean_or(df, col, default=0.0):
             return float(df[col].mean()) if col in df.columns and len(df[col]) > 0 else float(default)
 
-        def last_or(df: pd.DataFrame, col: str, default: float = 0.0) -> float:
+        def last_or(df, col, default=0.0):
             return float(df[col].iloc[-1]) if col in df.columns and len(df[col]) > 0 else float(default)
 
         current_price = last_or(df, 'unit_price', 0.0)
         avg_freight = mean_or(df, 'freight_price', 0.0)
         avg_score = mean_or(df, 'product_score', 0.0)
 
+        # Critère : dans une vraie application, utilisez une valeur constante ou la dernière observation
         price_range = np.linspace(current_price * 0.5, current_price * 1.5, 50)
 
         best_price = current_price
@@ -112,7 +125,7 @@ class PriceOptimizer:
             'scenarios': scenarios
         }
 
-    def calculate_elasticity(self, price_data: List[Dict]) -> float:
+    def calculate_elasticity(self, price_data: list[dict]) -> float:
         df = pd.DataFrame(price_data)
 
         if len(df) < 2:
@@ -121,9 +134,9 @@ class PriceOptimizer:
         price_change = (df['unit_price'].iloc[-1] - df['unit_price'].iloc[0]) / df['unit_price'].iloc[0]
         qty_change = (df['qty'].iloc[-1] - df['qty'].iloc[0]) / df['qty'].iloc[0]
 
-        if price_change == 0 or df['qty'].iloc[0] == 0:
+        # Si la variation de prix est nulle, l’élasticité est indéfinie
+        if abs(price_change) < 1e-6 or df['qty'].iloc[0] == 0:
             return 0.0
 
         elasticity = qty_change / price_change
-
         return float(elasticity)

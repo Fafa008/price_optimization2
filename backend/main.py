@@ -108,7 +108,7 @@ async def optimize_price(payload: PriceOptimizationRequest):
             raise HTTPException(status_code=400, detail="Insufficient data to optimize (need >= 5 records)")
 
         optimizer = PriceOptimizer()
-        result = optimizer.optimize_price(price_data, target_revenue=payload.target_revenue)
+        result = optimizer.optimize_price(price_data)
 
         # Also include a quick model summary
         model_info = optimizer.train_demand_model(price_data)
