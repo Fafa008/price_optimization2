@@ -58,6 +58,9 @@ export function Optimization() {
   const [optimizing, setOptimizing] = useState<boolean>(false);
   const [optResult, setOptResult] = useState<OptimizeResponse | null>(null);
   const [elasticity, setElasticity] = useState<number | null>(null);
+  const [chartMetric, setChartMetric] = useState<
+    "predicted_quantity" | "predicted_revenue"
+  >("predicted_revenue");
 
   const apiUrl = useMemo(() => apiBaseUrl.replace(/\/$/, ""), []);
   const hasApiPrefix = useMemo(() => /\/(api)$/i.test(apiUrl), [apiUrl]);
@@ -388,6 +391,232 @@ export function Optimization() {
                           ))}
                       </tbody>
                     </table>
+                  </div>
+                </div>
+
+                {/* Prediction Chart */}
+                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                  <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+                    <div className="font-medium text-gray-900">
+                      Prediction Chart
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <button
+                        onClick={() => setChartMetric("predicted_quantity")}
+                        className={`px-3 py-1 rounded-md border ${
+                          chartMetric === "predicted_quantity"
+                            ? "bg-blue-600 text-white border-blue-600"
+                            : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                        }`}
+                      >
+                        Quantity
+                      </button>
+                      <button
+                        onClick={() => setChartMetric("predicted_revenue")}
+                        className={`px-3 py-1 rounded-md border ${
+                          chartMetric === "predicted_revenue"
+                            ? "bg-blue-600 text-white border-blue-600"
+                            : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                        }`}
+                      >
+                        Revenue
+                      </button>
+                    </div>
+                  </div>
+                  <div className="px-4 py-4">
+                    {(() => {
+                      const scenarios = optResult.result.scenarios.slice();
+                      if (scenarios.length === 0)
+                        return (
+                          <p className="text-sm text-gray-600">No scenarios.</p>
+                        );
+                      // Ensure sorted by price
+                      scenarios.sort((a, b) => a.price - b.price);
+
+                      const values = scenarios.map((s) => s[chartMetric]);
+                      const prices = scenarios.map((s) => s.price);
+                      const minX = Math.min(...prices);
+                      const maxX = Math.max(...prices);
+                      const minY = Math.min(...values);
+                      const maxY = Math.max(...values);
+
+                      // Chart box
+                      const width = 720; // allow horizontal scrolling if narrow container
+                      const height = 260;
+                      const margin = {
+                        top: 10,
+                        right: 16,
+                        bottom: 28,
+                        left: 44,
+                      };
+                      const iw = width - margin.left - margin.right;
+                      const ih = height - margin.top - margin.bottom;
+
+                      const xScale = (x: number) =>
+                        iw === 0 || maxX === minX
+                          ? margin.left
+                          : margin.left + ((x - minX) / (maxX - minX)) * iw;
+                      const yScale = (y: number) =>
+                        ih === 0 || maxY === minY
+                          ? margin.top + ih
+                          : margin.top + ih - ((y - minY) / (maxY - minY)) * ih;
+
+                      const pathD = scenarios
+                        .map(
+                          (s, i) =>
+                            `${i === 0 ? "M" : "L"}${xScale(s.price)},${yScale(
+                              s[chartMetric]
+                            )}`
+                        )
+                        .join(" ");
+
+                      // Ticks
+                      const xTicks = 5;
+                      const yTicks = 5;
+                      const xTickValues = Array.from(
+                        { length: xTicks + 1 },
+                        (_, i) => minX + (i * (maxX - minX)) / xTicks
+                      );
+                      const yTickValues = Array.from(
+                        { length: yTicks + 1 },
+                        (_, i) => minY + (i * (maxY - minY)) / yTicks
+                      );
+
+                      const formatCurrency = (v: number) =>
+                        `$${v.toLocaleString(undefined, {
+                          maximumFractionDigits: 2,
+                        })}`;
+                      const formatNumber = (v: number) =>
+                        v.toLocaleString(undefined, {
+                          maximumFractionDigits: 2,
+                        });
+
+                      return (
+                        <div className="overflow-x-auto">
+                          <svg
+                            width={width}
+                            height={height}
+                            className="min-w-full"
+                          >
+                            {/* Axes */}
+                            <line
+                              x1={margin.left}
+                              y1={margin.top + ih}
+                              x2={margin.left + iw}
+                              y2={margin.top + ih}
+                              stroke="#E5E7EB"
+                            />
+                            <line
+                              x1={margin.left}
+                              y1={margin.top}
+                              x2={margin.left}
+                              y2={margin.top + ih}
+                              stroke="#E5E7EB"
+                            />
+
+                            {/* X ticks */}
+                            {xTickValues.map((v, i) => (
+                              <g key={`xt-${i}`}>
+                                <line
+                                  x1={xScale(v)}
+                                  y1={margin.top + ih}
+                                  x2={xScale(v)}
+                                  y2={margin.top + ih + 4}
+                                  stroke="#9CA3AF"
+                                />
+                                <text
+                                  x={xScale(v)}
+                                  y={margin.top + ih + 16}
+                                  textAnchor="middle"
+                                  fontSize="10"
+                                  fill="#6B7280"
+                                >
+                                  {formatCurrency(v)}
+                                </text>
+                              </g>
+                            ))}
+
+                            {/* Y ticks */}
+                            {yTickValues.map((v, i) => (
+                              <g key={`yt-${i}`}>
+                                <line
+                                  x1={margin.left - 4}
+                                  y1={yScale(v)}
+                                  x2={margin.left}
+                                  y2={yScale(v)}
+                                  stroke="#9CA3AF"
+                                />
+                                <text
+                                  x={margin.left - 8}
+                                  y={yScale(v) + 3}
+                                  textAnchor="end"
+                                  fontSize="10"
+                                  fill="#6B7280"
+                                >
+                                  {chartMetric === "predicted_revenue"
+                                    ? formatCurrency(v)
+                                    : formatNumber(v)}
+                                </text>
+                                <line
+                                  x1={margin.left}
+                                  y1={yScale(v)}
+                                  x2={margin.left + iw}
+                                  y2={yScale(v)}
+                                  stroke="#F3F4F6"
+                                />
+                              </g>
+                            ))}
+
+                            {/* Line path */}
+                            <path
+                              d={pathD}
+                              fill="none"
+                              stroke="#2563EB"
+                              strokeWidth={2}
+                            />
+
+                            {/* Optimized point marker */}
+                            {(() => {
+                              const px = optResult.result.optimized_price;
+                              const match = scenarios.reduce(
+                                (best, s) =>
+                                  Math.abs(s.price - px) <
+                                  Math.abs(best.price - px)
+                                    ? s
+                                    : best,
+                                scenarios[0]
+                              );
+                              const cx = xScale(match.price);
+                              const cy = yScale(match[chartMetric]);
+                              return (
+                                <g>
+                                  <circle
+                                    cx={cx}
+                                    cy={cy}
+                                    r={4}
+                                    fill="#10B981"
+                                  />
+                                  <text
+                                    x={cx + 6}
+                                    y={cy - 6}
+                                    fontSize="10"
+                                    fill="#065F46"
+                                  >
+                                    Opt @ {formatCurrency(match.price)}
+                                  </text>
+                                </g>
+                              );
+                            })()}
+                          </svg>
+                          <div className="text-xs text-gray-600 mt-2">
+                            X: Price, Y:{" "}
+                            {chartMetric === "predicted_revenue"
+                              ? "Predicted Revenue"
+                              : "Predicted Quantity"}
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
 
