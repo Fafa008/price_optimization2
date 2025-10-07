@@ -13,9 +13,9 @@ function App() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   const navigation = [
-    { name: "Dashboard", view: "dashboard" as View, icon: BarChart3 },
-    { name: "Products", view: "products" as View, icon: Package },
-    { name: "Optimization", view: "optimization" as View, icon: TrendingUp },
+    { name: "Tableau de bord", view: "dashboard" as View, icon: BarChart3 },
+    { name: "Produits", view: "products" as View, icon: Package },
+    { name: "Optimisation", view: "optimization" as View, icon: TrendingUp },
   ];
 
   return (
@@ -29,10 +29,10 @@ function App() {
               </div>
               <div>
                 <h1 className="text-xl font-bold text-gray-900">
-                  Price Optimizer
+                  Optimisation des prix
                 </h1>
                 <p className="text-xs text-gray-500">
-                  Retail Analytics Platform
+                  Plateforme d’analytique retail
                 </p>
               </div>
             </div>

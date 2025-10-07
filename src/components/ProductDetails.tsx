@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
-import { X, TrendingUp, Calendar, DollarSign } from 'lucide-react';
-import { supabase } from '../lib/supabase';
-import { Product, PriceHistory } from '../types';
+import { useEffect, useState } from "react";
+import { X, TrendingUp, Calendar, DollarSign } from "lucide-react";
+import { supabase } from "../lib/supabase";
+import { Product, PriceHistory } from "../types";
 
 interface ProductDetailsProps {
   product: Product;
@@ -19,24 +19,26 @@ export function ProductDetails({ product, onClose }: ProductDetailsProps) {
   const loadPriceHistory = async () => {
     try {
       const { data, error } = await supabase
-        .from('price_history')
-        .select('*')
-        .eq('product_id', product.id)
-        .order('year')
-        .order('month');
+        .from("price_history")
+        .select("*")
+        .eq("product_id", product.id)
+        .order("year")
+        .order("month");
 
       if (error) throw error;
       setPriceHistory(data || []);
     } catch (error) {
-      console.error('Error loading price history:', error);
+      console.error("Error loading price history:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  const avgPrice = priceHistory.length > 0
-    ? priceHistory.reduce((sum, h) => sum + h.unit_price, 0) / priceHistory.length
-    : 0;
+  const avgPrice =
+    priceHistory.length > 0
+      ? priceHistory.reduce((sum, h) => sum + h.unit_price, 0) /
+        priceHistory.length
+      : 0;
 
   const totalSales = priceHistory.reduce((sum, h) => sum + h.qty, 0);
   const totalRevenue = priceHistory.reduce((sum, h) => sum + h.total_price, 0);
@@ -46,8 +48,12 @@ export function ProductDetails({ product, onClose }: ProductDetailsProps) {
       <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">{product.product_id}</h2>
-            <p className="text-gray-600 mt-1">{product.product_category_name.replace(/_/g, ' ')}</p>
+            <h2 className="text-2xl font-bold text-gray-900">
+              {product.product_id}
+            </h2>
+            <p className="text-gray-600 mt-1">
+              {product.product_category_name.replace(/_/g, " ")}
+            </p>
           </div>
           <button
             onClick={onClose}
@@ -62,15 +68,21 @@ export function ProductDetails({ product, onClose }: ProductDetailsProps) {
             <div className="bg-blue-50 rounded-lg p-4">
               <div className="flex items-center gap-2 mb-2">
                 <DollarSign className="w-5 h-5 text-blue-600" />
-                <span className="text-sm font-medium text-blue-900">Avg Price</span>
+                <span className="text-sm font-medium text-blue-900">
+                  Prix moyen
+                </span>
               </div>
-              <p className="text-2xl font-bold text-blue-900">${avgPrice.toFixed(2)}</p>
+              <p className="text-2xl font-bold text-blue-900">
+                ${avgPrice.toFixed(2)}
+              </p>
             </div>
 
             <div className="bg-green-50 rounded-lg p-4">
               <div className="flex items-center gap-2 mb-2">
                 <TrendingUp className="w-5 h-5 text-green-600" />
-                <span className="text-sm font-medium text-green-900">Total Sales</span>
+                <span className="text-sm font-medium text-green-900">
+                  Ventes totales
+                </span>
               </div>
               <p className="text-2xl font-bold text-green-900">{totalSales}</p>
             </div>
@@ -78,42 +90,60 @@ export function ProductDetails({ product, onClose }: ProductDetailsProps) {
             <div className="bg-yellow-50 rounded-lg p-4">
               <div className="flex items-center gap-2 mb-2">
                 <Calendar className="w-5 h-5 text-yellow-600" />
-                <span className="text-sm font-medium text-yellow-900">Total Revenue</span>
+                <span className="text-sm font-medium text-yellow-900">
+                  Chiffre d’affaires
+                </span>
               </div>
-              <p className="text-2xl font-bold text-yellow-900">${totalRevenue.toFixed(2)}</p>
+              <p className="text-2xl font-bold text-yellow-900">
+                ${totalRevenue.toFixed(2)}
+              </p>
             </div>
           </div>
 
           <div className="bg-gray-50 rounded-lg p-4 mb-6">
-            <h3 className="font-semibold text-gray-900 mb-3">Product Information</h3>
+            <h3 className="font-semibold text-gray-900 mb-3">
+              Informations produit
+            </h3>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="text-gray-600">Score:</span>
-                <span className="ml-2 font-medium text-gray-900">{product.product_score}</span>
+                <span className="text-gray-600">Score :</span>
+                <span className="ml-2 font-medium text-gray-900">
+                  {product.product_score}
+                </span>
               </div>
               <div>
-                <span className="text-gray-600">Weight:</span>
-                <span className="ml-2 font-medium text-gray-900">{product.product_weight_g}g</span>
+                <span className="text-gray-600">Poids :</span>
+                <span className="ml-2 font-medium text-gray-900">
+                  {product.product_weight_g}g
+                </span>
               </div>
               <div>
-                <span className="text-gray-600">Photos:</span>
-                <span className="ml-2 font-medium text-gray-900">{product.product_photos_qty}</span>
+                <span className="text-gray-600">Photos :</span>
+                <span className="ml-2 font-medium text-gray-900">
+                  {product.product_photos_qty}
+                </span>
               </div>
               <div>
-                <span className="text-gray-600">Volume:</span>
-                <span className="ml-2 font-medium text-gray-900">{product.volume.toFixed(2)}</span>
+                <span className="text-gray-600">Volume :</span>
+                <span className="ml-2 font-medium text-gray-900">
+                  {product.volume.toFixed(2)}
+                </span>
               </div>
             </div>
           </div>
 
           <div>
-            <h3 className="font-semibold text-gray-900 mb-4">Price History</h3>
+            <h3 className="font-semibold text-gray-900 mb-4">
+              Historique des prix
+            </h3>
             {loading ? (
               <div className="flex items-center justify-center h-32">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
               </div>
             ) : priceHistory.length === 0 ? (
-              <p className="text-center text-gray-500 py-8">No price history available</p>
+              <p className="text-center text-gray-500 py-8">
+                Aucun historique de prix disponible
+              </p>
             ) : (
               <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                 <div className="overflow-x-auto">
@@ -124,16 +154,16 @@ export function ProductDetails({ product, onClose }: ProductDetailsProps) {
                           Date
                         </th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                          Price
+                          Prix
                         </th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                          Qty Sold
+                          Qté vendue
                         </th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                          Revenue
+                          Chiffre d’affaires
                         </th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                          Customers
+                          Clients
                         </th>
                       </tr>
                     </thead>

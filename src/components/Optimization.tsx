@@ -89,7 +89,7 @@ export function Optimization() {
       const json = await res.json();
       setPing(`${json.message} (${json.status})`);
     } catch (e) {
-      setError("Failed to reach API root");
+      setError("Échec de connexion à la racine de l’API");
     } finally {
       setLoadingPing(false);
     }
@@ -103,7 +103,7 @@ export function Optimization() {
       const json = await res.json();
       setProducts(json.products || []);
     } catch (e) {
-      setError("Failed to load products");
+      setError("Échec du chargement des produits");
     } finally {
       setLoadingProducts(false);
     }
@@ -117,7 +117,7 @@ export function Optimization() {
       const json = await res.json();
       setSummary(json);
     } catch (e) {
-      setError("Failed to load analytics summary");
+      setError("Échec du chargement de la synthèse analytique");
     } finally {
       setLoadingSummary(false);
     }
@@ -140,12 +140,12 @@ export function Optimization() {
       });
       if (!res.ok) {
         const t = await res.text();
-        throw new Error(t || "Optimization failed");
+        throw new Error(t || "L’optimisation a échoué");
       }
       const json: OptimizeResponse = await res.json();
       setOptResult(json);
     } catch (e: any) {
-      setError(e?.message || "Failed to run optimization");
+      setError(e?.message || "Échec de l’optimisation");
     } finally {
       setOptimizing(false);
     }
@@ -172,10 +172,10 @@ export function Optimization() {
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
           <TrendingUp className="w-6 h-6 text-blue-600" />
-          Price Optimization
+          Optimisation des prix
         </h2>
         <p className="text-gray-600 mt-1">
-          Interact with FastAPI backend for optimization workflow
+          Interagissez avec l’API FastAPI pour le flux d’optimisation
         </p>
       </div>
 
@@ -184,30 +184,28 @@ export function Optimization() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <PlugZap className="w-5 h-5 text-green-600" />
-              <span className="font-semibold text-gray-900">
-                API Connection
-              </span>
+              <span className="font-semibold text-gray-900">Connexion API</span>
             </div>
             <button
               onClick={checkPing}
               className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
             >
               <RefreshCw className="w-4 h-4" />
-              Refresh
+              Actualiser
             </button>
           </div>
           <p className="text-xs text-gray-500 break-all mb-2">
-            Base URL: {apiUrl}
+            URL de base : {apiUrl}
           </p>
           {loadingPing ? (
-            <p className="text-gray-600">Checking...</p>
+            <p className="text-gray-600">Vérification…</p>
           ) : ping ? (
             <p className="text-green-700 bg-green-50 rounded-md px-3 py-2 inline-block">
               {ping}
             </p>
           ) : (
             <p className="text-gray-600">
-              Click Refresh to check connectivity.
+              Cliquez sur Actualiser pour tester la connectivité.
             </p>
           )}
         </div>
@@ -215,7 +213,9 @@ export function Optimization() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-2 mb-4">
             <PackageSearch className="w-5 h-5 text-purple-600" />
-            <span className="font-semibold text-gray-900">Select Product</span>
+            <span className="font-semibold text-gray-900">
+              Sélectionner un produit
+            </span>
           </div>
           <select
             value={selectedProductId}
@@ -224,7 +224,9 @@ export function Optimization() {
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-500"
           >
             <option value="">
-              {loadingProducts ? "Loading products…" : "Choose a product..."}
+              {loadingProducts
+                ? "Chargement des produits…"
+                : "Choisissez un produit…"}
             </option>
             {products.map((p) => (
               <option key={p.id} value={p.product_id}>
@@ -239,53 +241,55 @@ export function Optimization() {
           <div className="flex items-center gap-2 mb-4">
             <Target className="w-5 h-5 text-blue-600" />
             <span className="font-semibold text-gray-900">
-              Analytics Summary
+              Synthèse analytique
             </span>
           </div>
           {loadingSummary ? (
-            <p className="text-gray-600">Loading summary...</p>
+            <p className="text-gray-600">Chargement de la synthèse…</p>
           ) : summary ? (
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div className="bg-gray-50 rounded-lg p-3">
-                <p className="text-gray-600">Products</p>
+                <p className="text-gray-600">Produits</p>
                 <p className="text-lg font-semibold text-gray-900">
                   {summary.total_products}
                 </p>
               </div>
               <div className="bg-gray-50 rounded-lg p-3">
-                <p className="text-gray-600">Records</p>
+                <p className="text-gray-600">Enregistrements</p>
                 <p className="text-lg font-semibold text-gray-900">
                   {summary.total_records}
                 </p>
               </div>
               <div className="bg-gray-50 rounded-lg p-3">
-                <p className="text-gray-600">Revenue</p>
+                <p className="text-gray-600">Chiffre d’affaires</p>
                 <p className="text-lg font-semibold text-gray-900">
                   ${summary.total_revenue.toLocaleString()}
                 </p>
               </div>
               <div className="bg-gray-50 rounded-lg p-3">
-                <p className="text-gray-600">Avg Price</p>
+                <p className="text-gray-600">Prix moyen</p>
                 <p className="text-lg font-semibold text-gray-900">
                   ${summary.average_price.toFixed(2)}
                 </p>
               </div>
             </div>
           ) : (
-            <p className="text-gray-600">No summary available.</p>
+            <p className="text-gray-600">Aucune synthèse disponible.</p>
           )}
         </div>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <h3 className="font-semibold text-gray-900 mb-4">Optimization</h3>
+        <h3 className="font-semibold text-gray-900 mb-4">Optimisation</h3>
         {!selectedProduct ? (
-          <p className="text-gray-600">Select a product to begin optimizing.</p>
+          <p className="text-gray-600">
+            Sélectionnez un produit pour commencer l’optimisation.
+          </p>
         ) : (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <p className="text-gray-700">
-                Selected product:{" "}
+                Produit sélectionné :{" "}
                 <span className="font-medium">
                   {selectedProduct.product_id}
                 </span>
@@ -295,7 +299,7 @@ export function Optimization() {
                   onClick={loadElasticity}
                   className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
                 >
-                  Load Elasticity
+                  Charger l’élasticité
                 </button>
                 <button
                   onClick={runOptimization}
@@ -304,7 +308,7 @@ export function Optimization() {
                     optimizing ? "bg-blue-400" : "bg-blue-600 hover:bg-blue-700"
                   }`}
                 >
-                  {optimizing ? "Optimizing…" : "Run Optimization"}
+                  {optimizing ? "Optimisation…" : "Lancer l’optimisation"}
                 </button>
               </div>
             </div>
@@ -312,7 +316,7 @@ export function Optimization() {
             {elasticity !== null && (
               <div className="bg-yellow-50 rounded-lg p-4 text-sm">
                 <p className="text-yellow-900">
-                  Price Elasticity:{" "}
+                  Élasticité prix :{" "}
                   <span className="font-semibold">{elasticity.toFixed(3)}</span>
                 </p>
               </div>
@@ -322,19 +326,19 @@ export function Optimization() {
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div className="bg-gray-50 rounded-lg p-4">
-                    <p className="text-gray-600 text-sm">Current Price</p>
+                    <p className="text-gray-600 text-sm">Prix actuel</p>
                     <p className="text-xl font-semibold text-gray-900">
                       ${optResult.result.current_price.toFixed(2)}
                     </p>
                   </div>
                   <div className="bg-green-50 rounded-lg p-4">
-                    <p className="text-green-700 text-sm">Optimized Price</p>
+                    <p className="text-green-700 text-sm">Prix optimisé</p>
                     <p className="text-xl font-semibold text-green-800">
                       ${optResult.result.optimized_price.toFixed(2)}
                     </p>
                   </div>
                   <div className="bg-blue-50 rounded-lg p-4">
-                    <p className="text-blue-700 text-sm">Expected Revenue</p>
+                    <p className="text-blue-700 text-sm">Revenu attendu</p>
                     <p className="text-xl font-semibold text-blue-800">
                       $
                       {optResult.result.expected_revenue.toLocaleString(
@@ -344,29 +348,65 @@ export function Optimization() {
                     </p>
                   </div>
                   <div className="bg-purple-50 rounded-lg p-4">
-                    <p className="text-purple-700 text-sm">Price Change</p>
+                    <p className="text-purple-700 text-sm">Variation de prix</p>
                     <p className="text-xl font-semibold text-purple-800">
                       {optResult.result.price_change_percentage.toFixed(2)}%
                     </p>
                   </div>
                 </div>
 
+                {/* Explanation block */}
+                <div className="bg-white rounded-lg border border-gray-200 p-4 text-sm text-gray-700">
+                  <p className="font-medium text-gray-900 mb-2">
+                    Comment lire ces résultats
+                  </p>
+                  <ul className="list-disc list-inside space-y-1">
+                    <li>
+                      <span className="font-medium">Le prix optimisé</span> est
+                      choisi pour maximiser le revenu prédit sur une grille de
+                      prix candidats.
+                    </li>
+                    <li>
+                      Le modèle est une régression linéaire entraînée sur
+                      l’historique récent des prix avec des variables comme le
+                      coût de transport, les effets calendrier, le score produit
+                      et le prix décalé.
+                    </li>
+                    <li>
+                      <span className="font-medium">R²</span> indique la qualité
+                      d’ajustement sur l’ensemble d’entraînement. À prendre
+                      comme un signal : des valeurs faibles suggèrent une
+                      généralisation limitée.
+                    </li>
+                    <li>
+                      Le tableau et le graphique des scénarios illustrent le
+                      compromis entre prix et demande/revenu. Le repère vert met
+                      en évidence le prix recommandé.
+                    </li>
+                    <li>
+                      Considérez ces résultats comme directionnels. En
+                      production, ajoutez validation, gestion des valeurs
+                      aberrantes et tests A/B.
+                    </li>
+                  </ul>
+                </div>
+
                 <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                   <div className="px-4 py-3 border-b border-gray-200 font-medium text-gray-900">
-                    Scenarios
+                    Scénarios
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead className="bg-gray-50">
                         <tr>
                           <th className="px-4 py-2 text-left text-gray-600">
-                            Price
+                            Prix
                           </th>
                           <th className="px-4 py-2 text-left text-gray-600">
-                            Predicted Qty
+                            Qté prédite
                           </th>
                           <th className="px-4 py-2 text-left text-gray-600">
-                            Predicted Revenue
+                            Revenu prédit
                           </th>
                         </tr>
                       </thead>
@@ -398,7 +438,7 @@ export function Optimization() {
                 <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                   <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
                     <div className="font-medium text-gray-900">
-                      Prediction Chart
+                      Graphique de prédiction
                     </div>
                     <div className="flex items-center gap-2 text-sm">
                       <button
@@ -409,7 +449,7 @@ export function Optimization() {
                             : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
                         }`}
                       >
-                        Quantity
+                        Quantité
                       </button>
                       <button
                         onClick={() => setChartMetric("predicted_revenue")}
@@ -419,7 +459,7 @@ export function Optimization() {
                             : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
                         }`}
                       >
-                        Revenue
+                        Revenu
                       </button>
                     </div>
                   </div>
@@ -428,7 +468,9 @@ export function Optimization() {
                       const scenarios = optResult.result.scenarios.slice();
                       if (scenarios.length === 0)
                         return (
-                          <p className="text-sm text-gray-600">No scenarios.</p>
+                          <p className="text-sm text-gray-600">
+                            Aucun scénario.
+                          </p>
                         );
                       // Ensure sorted by price
                       scenarios.sort((a, b) => a.price - b.price);
@@ -609,10 +651,10 @@ export function Optimization() {
                             })()}
                           </svg>
                           <div className="text-xs text-gray-600 mt-2">
-                            X: Price, Y:{" "}
+                            X : Prix, Y :{" "}
                             {chartMetric === "predicted_revenue"
-                              ? "Predicted Revenue"
-                              : "Predicted Quantity"}
+                              ? "Revenu prédit"
+                              : "Quantité prédite"}
                           </div>
                         </div>
                       );
@@ -621,9 +663,22 @@ export function Optimization() {
                 </div>
 
                 <div className="bg-gray-50 rounded-lg p-4 text-xs text-gray-700">
-                  <p className="font-semibold mb-2">Model Summary</p>
-                  <p>R²: {optResult.model.r_squared.toFixed(4)}</p>
-                  <p>Intercept: {optResult.model.intercept.toFixed(4)}</p>
+                  <p className="font-semibold mb-2">Résumé du modèle</p>
+                  <p>R² : {optResult.model.r_squared.toFixed(4)}</p>
+                  <p>Intercept : {optResult.model.intercept.toFixed(4)}</p>
+                  {optResult.model.coefficients && (
+                    <div className="mt-2">
+                      <p className="font-medium">
+                        Effet des variables (coefficients)
+                      </p>
+                      <p className="text-gray-600">
+                        Des valeurs absolues plus élevées indiquent une
+                        influence plus forte sur la quantité prédite. Les
+                        valeurs positives augmentent la quantité ; les négatives
+                        la réduisent.
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

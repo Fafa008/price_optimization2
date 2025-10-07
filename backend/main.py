@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi import Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
@@ -42,10 +43,25 @@ async def root():
     return {"message": "Price Optimization API", "status": "running"}
 
 @app.get("/api/products")
-async def get_products():
+async def get_products(
+    limit: int = Query(50, ge=1, le=500),
+    offset: int = Query(0, ge=0),
+    category: Optional[str] = None,
+    search: Optional[str] = None,
+):
     try:
-        response = supabase.table("products").select("*").execute()
-        return {"products": response.data}
+        query = supabase.table("products").select("*")
+        if category:
+            query = query.eq("product_category_name", category)
+        if search:
+            # Basic search on product_id or category name
+            query = query.or_(f"product_id.ilike.%{search}%,product_category_name.ilike.%{search}%")
+
+        # Supabase range is inclusive; compute end index
+        start = offset
+        end = offset + limit - 1
+        response = query.order("product_id", desc=False).range(start, end).execute()
+        return {"products": response.data, "limit": limit, "offset": offset}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -62,14 +78,25 @@ async def get_product(product_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/products/{product_id}/price-history")
-async def get_price_history(product_id: str):
+async def get_price_history(product_id: str, limit: int = Query(120, ge=1, le=1000), offset: int = Query(0, ge=0)):
     try:
         product_response = supabase.table("products").select("id").eq("product_id", product_id).maybe_single().execute()
         if not product_response.data:
             raise HTTPException(status_code=404, detail="Product not found")
 
-        history_response = supabase.table("price_history").select("*").eq("product_id", product_response.data["id"]).order("year", desc=False).order("month", desc=False).execute()
-        return {"price_history": history_response.data}
+        start = offset
+        end = offset + limit - 1
+        history_response = (
+            supabase
+            .table("price_history")
+            .select("*")
+            .eq("product_id", product_response.data["id"])
+            .order("year", desc=False)
+            .order("month", desc=False)
+            .range(start, end)
+            .execute()
+        )
+        return {"price_history": history_response.data, "limit": limit, "offset": offset}
     except HTTPException:
         raise
     except Exception as e:
