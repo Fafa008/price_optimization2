@@ -355,42 +355,6 @@ export function Optimization() {
                   </div>
                 </div>
 
-                {/* Explanation block */}
-                <div className="bg-white rounded-lg border border-gray-200 p-4 text-sm text-gray-700">
-                  <p className="font-medium text-gray-900 mb-2">
-                    Comment lire ces résultats
-                  </p>
-                  <ul className="list-disc list-inside space-y-1">
-                    <li>
-                      <span className="font-medium">Le prix optimisé</span> est
-                      choisi pour maximiser le revenu prédit sur une grille de
-                      prix candidats.
-                    </li>
-                    <li>
-                      Le modèle est une régression linéaire entraînée sur
-                      l’historique récent des prix avec des variables comme le
-                      coût de transport, les effets calendrier, le score produit
-                      et le prix décalé.
-                    </li>
-                    <li>
-                      <span className="font-medium">R²</span> indique la qualité
-                      d’ajustement sur l’ensemble d’entraînement. À prendre
-                      comme un signal : des valeurs faibles suggèrent une
-                      généralisation limitée.
-                    </li>
-                    <li>
-                      Le tableau et le graphique des scénarios illustrent le
-                      compromis entre prix et demande/revenu. Le repère vert met
-                      en évidence le prix recommandé.
-                    </li>
-                    <li>
-                      Considérez ces résultats comme directionnels. En
-                      production, ajoutez validation, gestion des valeurs
-                      aberrantes et tests A/B.
-                    </li>
-                  </ul>
-                </div>
-
                 <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                   <div className="px-4 py-3 border-b border-gray-200 font-medium text-gray-900">
                     Scénarios

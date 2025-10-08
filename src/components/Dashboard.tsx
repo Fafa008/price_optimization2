@@ -148,61 +148,6 @@ export function Dashboard() {
           );
         })}
       </div>
-
-      {/* Description du jeu de données */}
-      <div className="mt-8 bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">
-          Description du jeu de données
-        </h3>
-        <p className="text-gray-600 mb-4">
-          Ce jeu de données combine les attributs produit, les ventes mensuelles
-          et les prix des concurrents pour soutenir l’optimisation des prix.
-          Chaque enregistrement mensuel résume la demande et le chiffre
-          d’affaires pour un produit.
-        </p>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-          <div className="bg-gray-50 rounded-lg p-4">
-            <p className="text-gray-500">Tables</p>
-            <ul className="mt-2 list-disc list-inside text-gray-800">
-              <li>
-                <span className="font-medium">products</span> : product_id,
-                catégorie, attributs, score
-              </li>
-              <li>
-                <span className="font-medium">price_history</span> : month_year,
-                qty, unit_price, total_price, variables
-              </li>
-              <li>
-                <span className="font-medium">competitor_prices</span> : jusqu’à
-                3 devis concurrents par mois
-              </li>
-            </ul>
-          </div>
-          <div className="bg-gray-50 rounded-lg p-4">
-            <p className="text-gray-500">Couverture</p>
-            <p className="mt-2 text-gray-800">
-              {coverage.start && coverage.end ? (
-                <>
-                  {coverage.start} to {coverage.end}
-                </>
-              ) : (
-                "Plage inconnue"
-              )}
-            </p>
-            <p className="text-gray-500 mt-1">
-              Sur {summary?.total_products ?? 0} produits
-            </p>
-          </div>
-          <div className="bg-gray-50 rounded-lg p-4">
-            <p className="text-gray-500">Champs clés</p>
-            <ul className="mt-2 list-disc list-inside text-gray-800">
-              <li>qty (demande), unit_price, total_price, freight_price</li>
-              <li>calendrier : weekday, weekend, holiday, month</li>
-              <li>signaux : product_score, s, lag_price, prix concurrents</li>
-            </ul>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
